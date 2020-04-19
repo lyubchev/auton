@@ -1,4 +1,4 @@
-module github.com/impzero/opinion-rate
+module github.com/impzero/autone
 
 go 1.13
 
