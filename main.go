@@ -5,6 +5,7 @@ import (
 	"os"
 
 	"github.com/davecgh/go-spew/spew"
+	"github.com/impzero/autone/autone/ibm"
 	"github.com/impzero/autone/autone/youtube"
 	"github.com/joho/godotenv"
 )
@@ -19,6 +20,8 @@ func main() {
 
 	youtubeClient := youtube.New(GoogleApiKey)
 	comments, err := youtubeClient.GetComments("xvZqHgFz51I", youtube.OrderRelevance, 100)
+
+	ibm.AnalyzeTone()
 	if err != nil {
 		panic(err)
 	}
