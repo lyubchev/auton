@@ -20,8 +20,8 @@ type Client struct {
 }
 
 func New(apiKey string) *Client {
-	c := Client{apiKey: apiKey}
-	return &c
+	c := &Client{apiKey: apiKey}
+	return c
 }
 
 func (c *Client) GetComments(videoId string, order Order, maxComments int) ([]string, error) {
