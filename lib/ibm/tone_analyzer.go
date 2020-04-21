@@ -1,8 +1,6 @@
 package ibm
 
 import (
-	"fmt"
-
 	"github.com/IBM/go-sdk-core/core"
 	"github.com/watson-developer-cloud/go-sdk/toneanalyzerv3"
 )
@@ -49,8 +47,8 @@ func New(config Config) (*Client, error) {
 	return ta, nil
 }
 
-func (c *Client) Do(text string) ([]string, error) {
-	generalTone := []string{}
+func (c *Client) Do(text string) (map[string]float64, error) {
+	tones := map[string]float64{}
 
 	result, _, err := c.toneAnalyzer.Tone(
 		&toneanalyzerv3.ToneOptions{
@@ -65,11 +63,10 @@ func (c *Client) Do(text string) ([]string, error) {
 	}
 
 	for _, tone := range result.DocumentTone.Tones {
-
-		scoreInPerc := fmt.Sprintf("%f", *tone.Score*100)[:6]
-
-		generalTone = append(generalTone, *tone.ToneName+": "+scoreInPerc+"%")
+		// scoreInPerc := fmt.Sprintf("%f", *tone.Score*100)[:6]
+		// generalTone = append(generalTone, *tone.ToneName+": "+scoreInPerc+"%")
+		tones[*tone.ToneName] = *tone.Score
 	}
 
-	return generalTone, nil
+	return tones, nil
 }
