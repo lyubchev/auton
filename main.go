@@ -20,19 +20,20 @@ func main() {
 	IbmApiKey := os.Getenv("IBM_API_KEY")
 
 	youtubeClient := youtube.New(GoogleApiKey)
-	comments, err := youtubeClient.GetComments("xvZqHgFz51I", youtube.OrderRelevance, 100)
+	comments, err := youtubeClient.GetComments("nG5O_OpJB10", youtube.OrderRelevance, 100)
 	if err != nil {
 		panic(err)
 	}
 
 	ibmClient, err := ibm.New(ibm.Config{ApiKey: IbmApiKey, ServiceUrl: "https://api.eu-gb.tone-analyzer.watson.cloud.ibm.com"})
 	if err != nil {
-		return nil, err
+		panic(err)
 	}
 
-	tones := AnalyzeCommentsTone(comments, ibmClient)
+	tones, err := AnalyzeCommentsTone(comments, ibmClient)
+	if err != nil {
+		panic(err)
+	}
 
-	spew.Dump(result)
-
-	// spew.Dump(comments)
+	spew.Dump(tones)
 }
