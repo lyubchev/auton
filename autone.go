@@ -24,11 +24,29 @@ const MaxRequestSize = 128000
 func AnalyzeCommentsTone(comments []string, ibmClient *ibm.Client) (map[Tone]string, error) {
 	batches := batchComments(comments)
 
+	// toneComputed stores each tone and because we may have many batches of comments each
+	// batch will return us a new result (score) then we will re-calculate the score of the
+	// specific tone by averaging it
+	//
+	// For example: 
+	// {
+	//	"Analytical": [0.75, 0.85, 0.61]
+	//  "Anger": [0.98, 0,51, 0,53 ],
+	//  }
+	//
+	// Will be computed to this:
+	//  {
+	//	"Analytical": [0.73]
+	//  "Anger": [0.673 ],
+	//  }
+	toneComputed := map[string][]float64
+
 	for _, batch := range batches {
 		tones, err := ibmClient.Do(batch)
 		if err != nil {
 			return nil, err
 		}
+
 	}
 
 }
