@@ -38,40 +38,39 @@ func AnalyzeCommentsTone(comments []string, ibmClient *ibm.Client) (map[tones.To
 
 	tonesChan := make(chan map[tones.Tone]float64, runtime.NumCPU())
 
-	go func() {
-		for tones := range tonesChan {
-			for k, v := range tones {
-				tc[k] = append(tc[k], v)
-			}
-		}
-	}()
-
 	var wg sync.WaitGroup
 
 	// throttler used to rate limit the requests
 	throttle := time.Tick(rateLimit)
 
-	for i, batch := range batches {
-		wg.Add(1)
+	go func() {
+		for i, batch := range batches {
+			wg.Add(1)
 
-		<-throttle
-		go func(i int, batch string) {
-			defer wg.Done()
+			<-throttle
+			go func(i int, batch string) {
+				defer wg.Done()
 
-			tones, err := ibmClient.Do(batch)
-			if err != nil {
-				log.Println(err)
-				return
-			}
-			log.Println("A new batch was analyzed!")
+				tones, err := ibmClient.Do(batch)
+				if err != nil {
+					log.Println(err)
+					return
+				}
+				log.Println("A new batch was analyzed!")
 
-			tonesChan <- tones
-		}(i, batch)
+				tonesChan <- tones
+			}(i, batch)
+		}
+
+		wg.Wait()
+		close(tonesChan)
+	}()
+
+	for tones := range tonesChan {
+		for k, v := range tones {
+			tc[k] = append(tc[k], v)
+		}
 	}
-
-	wg.Wait()
-
-	close(tonesChan)
 
 	result := map[tones.Tone]float64{}
 
