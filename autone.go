@@ -2,18 +2,7 @@ package main
 
 import (
 	"github.com/impzero/autone/lib/ibm"
-)
-
-type Tone string
-
-const (
-	Anger      Tone = "Anger"
-	Fear       Tone = "Fear"
-	Joy        Tone = "Joy"
-	Sadness    Tone = "Sadness"
-	Analytical Tone = "Analytical"
-	Confident  Tone = "Confident"
-	Tentative  Tone = "Tentative"
+	"github.com/impzero/autone/tones"
 )
 
 const MaxRequestSize = 128000
@@ -21,7 +10,7 @@ const MaxRequestSize = 128000
 // AnalyzeCommentsTone takes all the comments from a youtube video passed
 // in array, batches them where each batch is no more than 128kB (the maximum request size IBM accepts)
 // returns a map where the key is the tone and the value is the score
-func AnalyzeCommentsTone(comments []string, ibmClient *ibm.Client) (map[Tone]float64, error) {
+func AnalyzeCommentsTone(comments []string, ibmClient *ibm.Client) (map[tones.Tone]float64, error) {
 	batches := batchComments(comments)
 
 	// toneComputed stores each tone and because we may have many batches of comments each
@@ -39,7 +28,7 @@ func AnalyzeCommentsTone(comments []string, ibmClient *ibm.Client) (map[Tone]flo
 	//	"Analytical": [0.73]
 	//  "Anger": [0.67],
 	//  }
-	tc := map[string][]float64{}
+	tc := map[tones.Tone][]float64{}
 
 	for _, batch := range batches {
 		tones, err := ibmClient.Do(batch)
@@ -52,33 +41,40 @@ func AnalyzeCommentsTone(comments []string, ibmClient *ibm.Client) (map[Tone]flo
 		}
 	}
 
-	result := map[string]float64
+	result := map[tones.Tone]float64{}
 
-	for k, v := range tc {
+	for k, _ := range tc {
 		avgScore := 0.0
 
 		for _, s := range tc[k] {
 			avgScore += s
 		}
 
-		avgScore = avgScore / len(tc[k])
+		avgScore = avgScore / float64(len(tc[k]))
 		result[k] = avgScore
 	}
-
 
 	return result, nil
 }
 
 func batchComments(comments []string) []string {
 	batches := []string{}
-	batchID := 0
 
+	batch := ""
 	for _, comment := range comments {
-		// We make batches with a maximus sie of `MaxRequestSize` measured in chars
-		if len(batches[batchID]+". "+comment) > MaxRequestSize {
-			batchID++
-		}
+		// We make batches with a maximum size of `MaxRequestSize` measured in chars
 
-		batches[batchID] = batches[batchID] + ". " + comment
+		if len(batch+". "+comment) <= MaxRequestSize {
+			batch += ". " + comment
+		} else {
+			batches = append(batches, batch)
+			batch = comment
+		}
 	}
+
+	if len(batches) == 0 {
+		batches = append(batches, batch)
+	}
+
+	return batches
 }
