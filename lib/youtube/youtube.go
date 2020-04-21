@@ -3,6 +3,7 @@ package youtube
 import (
 	"context"
 	"errors"
+	"log"
 
 	"google.golang.org/api/option"
 	youtube "google.golang.org/api/youtube/v3"
@@ -51,7 +52,10 @@ func (c *Client) GetComments(videoId string, order Order, maxComments int) ([]st
 			c := item.Snippet.TopLevelComment.Snippet.TextDisplay
 			comments = append(comments, c)
 
-			if len(comments) == maxComments {
+			lenComments := len(comments)
+
+			log.Printf("%d/%d comments fetched!", lenComments, maxComments)
+			if lenComments == maxComments {
 				cancelCtxFunc()
 				break
 			}

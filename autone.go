@@ -1,11 +1,17 @@
 package main
 
 import (
+	"log"
+	"runtime"
+	"sync"
+	"time"
+
 	"github.com/impzero/autone/lib/ibm"
 	"github.com/impzero/autone/tones"
 )
 
 const MaxRequestSize = 128000
+const rateLimit = time.Second / 20
 
 // AnalyzeCommentsTone takes all the comments from a youtube video passed
 // in array, batches them where each batch is no more than 128kB (the maximum request size IBM accepts)
@@ -30,22 +36,46 @@ func AnalyzeCommentsTone(comments []string, ibmClient *ibm.Client) (map[tones.To
 	//  }
 	tc := map[tones.Tone][]float64{}
 
-	for _, batch := range batches {
-		go func() {
-			tones, err := ibmClient.Do(batch)
-			if err != nil {
-				return nil, err
-			}
+	tonesChan := make(chan map[tones.Tone]float64, runtime.NumCPU())
 
+	go func() {
+		for tones := range tonesChan {
 			for k, v := range tones {
 				tc[k] = append(tc[k], v)
 			}
-		}()
+		}
+	}()
+
+	var wg sync.WaitGroup
+
+	// throttler used to rate limit the requests
+	throttle := time.Tick(rateLimit)
+
+	for i, batch := range batches {
+		wg.Add(1)
+
+		<-throttle
+		go func(i int, batch string) {
+			defer wg.Done()
+
+			tones, err := ibmClient.Do(batch)
+			if err != nil {
+				log.Println(err)
+				return
+			}
+			log.Println("A new batch was analyzed!")
+
+			tonesChan <- tones
+		}(i, batch)
 	}
+
+	wg.Wait()
+
+	close(tonesChan)
 
 	result := map[tones.Tone]float64{}
 
-	for k, _ := range tc {
+	for k := range tc {
 		avgScore := 0.0
 
 		for _, s := range tc[k] {
