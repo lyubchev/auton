@@ -31,14 +31,16 @@ func AnalyzeCommentsTone(comments []string, ibmClient *ibm.Client) (map[tones.To
 	tc := map[tones.Tone][]float64{}
 
 	for _, batch := range batches {
-		tones, err := ibmClient.Do(batch)
-		for k, v := range tones {
-			tc[k] = append(tc[k], v)
-		}
+		go func() {
+			tones, err := ibmClient.Do(batch)
+			if err != nil {
+				return nil, err
+			}
 
-		if err != nil {
-			return nil, err
-		}
+			for k, v := range tones {
+				tc[k] = append(tc[k], v)
+			}
+		}()
 	}
 
 	result := map[tones.Tone]float64{}
