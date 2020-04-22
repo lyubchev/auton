@@ -20,7 +20,7 @@ func main() {
 	IbmApiKey := os.Getenv("IBM_API_KEY")
 
 	youtubeClient := youtube.New(GoogleApiKey)
-	comments, err := youtubeClient.GetComments("2Vv-BfVoq4g", youtube.OrderRelevance, 1500)
+	comments, err := youtubeClient.GetComments("sM_NlKAcGpo", youtube.OrderRelevance, 100)
 	if err != nil {
 		panic(err)
 	}
