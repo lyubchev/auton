@@ -32,21 +32,23 @@ func (web *Web) analyze(w http.ResponseWriter, r *http.Request) {
 	videoID := chi.URLParam(r, "videoID")
 	maxComments, err := strconv.Atoi((r.URL.Query().Get("max")))
 	if err != nil {
-
 		render.Status(r, http.StatusBadRequest)
-		render.JSON(w, r, "Max comments must be a number")
+		render.JSON(w, r, "Max comments must be a number of type int")
+		return
 	}
 
 	comments, err := web.youtubeClient.GetComments(videoID, youtube.OrderRelevance, maxComments)
 	if err != nil {
 		render.Status(r, http.StatusInternalServerError)
 		render.JSON(w, r, "Couldn't fetch comments from youtube video with id"+videoID)
+		return
 	}
 
 	tones, err := AnalyzeCommentsTone(comments, web.ibmClient)
 	if err != nil {
 		render.Status(r, http.StatusInternalServerError)
 		render.JSON(w, r, "Couldn't analyze comments from youtube video with id"+videoID)
+		return
 	}
 
 	render.Status(r, http.StatusOK)

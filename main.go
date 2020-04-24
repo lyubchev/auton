@@ -2,9 +2,9 @@ package main
 
 import (
 	"log"
+	"net/http"
 	"os"
 
-	"github.com/davecgh/go-spew/spew"
 	"github.com/impzero/auton/lib/ibm"
 	"github.com/impzero/auton/lib/youtube"
 	"github.com/joho/godotenv"
@@ -20,11 +20,14 @@ func main() {
 	IbmApiKey := os.Getenv("IBM_API_KEY")
 
 	youtubeClient := youtube.New(GoogleApiKey)
-
 	ibmClient, err := ibm.New(ibm.Config{ApiKey: IbmApiKey, ServiceUrl: "https://api.eu-gb.tone-analyzer.watson.cloud.ibm.com"})
 	if err != nil {
 		panic(err)
 	}
 
-	spew.Dump(tones)
+	w := NewWeb(youtubeClient, ibmClient)
+	log.Println("Server started, listening on port :8080")
+	if err := http.ListenAndServe(":8080", w.Router); err != nil {
+		panic(err)
+	}
 }
