@@ -82,7 +82,6 @@ const (
 	xssProtectionValue           = "1; mode=block"
 	strictTransportSecurity      = "Strict-Transport-Security"                    // details https://blog.bracelab.com/achieving-perfect-ssl-labs-score-with-go + https://developer.mozilla.org/en-US/docs/Web/Security/HTTP_strict_transport_security
 	strictTransportSecurityValue = "max-age=31536000; includeSubDomains; preload" // 31536000 = just shy of 12 months
-	// also look at Content-Security-Policy in the future.
 )
 
 func Security(next http.Handler) http.Handler {
