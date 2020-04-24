@@ -5,8 +5,8 @@ import (
 	"os"
 
 	"github.com/davecgh/go-spew/spew"
-	"github.com/impzero/autone/lib/ibm"
-	"github.com/impzero/autone/lib/youtube"
+	"github.com/impzero/auton/lib/ibm"
+	"github.com/impzero/auton/lib/youtube"
 	"github.com/joho/godotenv"
 )
 

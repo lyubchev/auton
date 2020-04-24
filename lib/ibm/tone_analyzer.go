@@ -2,7 +2,7 @@ package ibm
 
 import (
 	"github.com/IBM/go-sdk-core/core"
-	tn "github.com/impzero/autone/tones"
+	tn "github.com/impzero/auton/tones"
 	"github.com/watson-developer-cloud/go-sdk/toneanalyzerv3"
 )
 

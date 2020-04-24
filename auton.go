@@ -6,8 +6,8 @@ import (
 	"sync"
 	"time"
 
-	"github.com/impzero/autone/lib/ibm"
-	"github.com/impzero/autone/tones"
+	"github.com/impzero/auton/lib/ibm"
+	tn "github.com/impzero/auton/tones"
 )
 
 const MaxRequestSize = 128000
@@ -16,7 +16,7 @@ const rateLimit = time.Second / 20
 // AnalyzeCommentsTone takes all the comments from a youtube video passed
 // in array, batches them where each batch is no more than 128kB (the maximum request size IBM accepts)
 // returns a map where the key is the tone and the value is the score
-func AnalyzeCommentsTone(comments []string, ibmClient *ibm.Client) (map[tones.Tone]float64, error) {
+func AnalyzeCommentsTone(comments []string, ibmClient *ibm.Client) (map[tn.Tone]float64, error) {
 	batches := batchComments(comments)
 
 	// toneComputed stores each tone and because we may have many batches of comments each
@@ -34,9 +34,9 @@ func AnalyzeCommentsTone(comments []string, ibmClient *ibm.Client) (map[tones.To
 	//	"Analytical": [0.73]
 	//  "Anger": [0.67],
 	//  }
-	tc := map[tones.Tone][]float64{}
+	tc := map[tn.Tone][]float64{}
 
-	tonesChan := make(chan map[tones.Tone]float64, runtime.NumCPU())
+	tonesChan := make(chan map[tn.Tone]float64, runtime.NumCPU())
 
 	var wg sync.WaitGroup
 
@@ -72,7 +72,7 @@ func AnalyzeCommentsTone(comments []string, ibmClient *ibm.Client) (map[tones.To
 		}
 	}
 
-	result := map[tones.Tone]float64{}
+	result := map[tn.Tone]float64{}
 
 	for k := range tc {
 		avgScore := 0.0
