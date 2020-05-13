@@ -48,11 +48,18 @@ func NewWeb(ytClient *youtube.Client, ibmClient *ibm.Client) *Web {
 
 func (web *Web) analyze(w http.ResponseWriter, r *http.Request) {
 	videoID := chi.URLParam(r, "videoID")
-	maxComments, err := strconv.Atoi((r.URL.Query().Get("max")))
-	if err != nil {
-		render.Status(r, http.StatusBadRequest)
-		render.JSON(w, r, "Max comments must be a number of type int")
-		return
+	maxComments := 100
+	param := r.URL.Query().Get("max")
+
+	if param != "" {
+		var err error
+
+		maxComments, err = strconv.Atoi(param)
+		if err != nil {
+			render.Status(r, http.StatusBadRequest)
+			render.JSON(w, r, "Max comments must be a number of type int")
+			return
+		}
 	}
 
 	comments, err := web.youtubeClient.GetComments(videoID, youtube.OrderRelevance, maxComments)
