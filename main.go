@@ -16,11 +16,11 @@ func main() {
 		log.Println(".env file not found, reading directly from env variables")
 	}
 
-	GoogleApiKey := os.Getenv("GOOGLE_API_KEY")
-	IbmApiKey := os.Getenv("IBM_API_KEY")
+	GoogleAPIKey := os.Getenv("GOOGLE_API_KEY")
+	IBMAPIKey := os.Getenv("IBM_API_KEY")
 
-	youtubeClient := youtube.New(GoogleApiKey)
-	ibmClient, err := ibm.New(ibm.Config{ApiKey: IbmApiKey, ServiceUrl: "https://api.eu-gb.tone-analyzer.watson.cloud.ibm.com"})
+	youtubeClient := youtube.New(GoogleAPIKey)
+	ibmClient, err := ibm.New(ibm.Config{APIKey: IBMAPIKey, ServiceURL: "https://api.eu-gb.tone-analyzer.watson.cloud.ibm.com"})
 	if err != nil {
 		panic(err)
 	}

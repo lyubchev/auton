@@ -13,8 +13,8 @@ const (
 )
 
 type Config struct {
-	ApiKey     string
-	ServiceUrl string
+	APIKey     string
+	ServiceURL string
 }
 
 type Client struct {
@@ -23,7 +23,7 @@ type Client struct {
 
 func New(config Config) (*Client, error) {
 	authenticator := &core.IamAuthenticator{
-		ApiKey: config.ApiKey,
+		ApiKey: config.APIKey,
 	}
 
 	options := &toneanalyzerv3.ToneAnalyzerV3Options{
@@ -36,7 +36,7 @@ func New(config Config) (*Client, error) {
 		return nil, err
 	}
 
-	err = toneAnalyzer.SetServiceURL(config.ServiceUrl)
+	err = toneAnalyzer.SetServiceURL(config.ServiceURL)
 	if err != nil {
 		return nil, err
 	}

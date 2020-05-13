@@ -17,24 +17,24 @@ const (
 )
 
 type Client struct {
-	apiKey string
+	APIKey string
 }
 
 func New(apiKey string) *Client {
-	c := &Client{apiKey: apiKey}
+	c := &Client{APIKey: apiKey}
 	return c
 }
 
-func (c *Client) GetComments(videoId string, order Order, maxComments int) ([]string, error) {
+func (c *Client) GetComments(videoID string, order Order, maxComments int) ([]string, error) {
 
 	comments := []string{}
 
 	ctx := context.Background()
-	ctx, cancelCtxFunc := context.WithCancel(ctx)
+	ctx, cancel := context.WithCancel(ctx)
 
-	youtubeService, err := youtube.NewService(ctx, option.WithAPIKey(c.apiKey))
+	youtubeService, err := youtube.NewService(ctx, option.WithAPIKey(c.APIKey))
 	if err != nil {
-		cancelCtxFunc()
+		cancel()
 		return nil, err
 	}
 
@@ -44,7 +44,7 @@ func (c *Client) GetComments(videoId string, order Order, maxComments int) ([]st
 	apiCall := commentThreadsService.List("snippet")
 
 	apiCall.TextFormat("plainText")
-	apiCall.VideoId(videoId)
+	apiCall.VideoId(videoID)
 	apiCall.Order(string(order))
 
 	err = apiCall.Pages(ctx, func(resp *youtube.CommentThreadListResponse) error {
@@ -56,7 +56,7 @@ func (c *Client) GetComments(videoId string, order Order, maxComments int) ([]st
 
 			log.Printf("%d/%d comments fetched!", lenComments, maxComments)
 			if lenComments == maxComments {
-				cancelCtxFunc()
+				cancel()
 				break
 			}
 		}
