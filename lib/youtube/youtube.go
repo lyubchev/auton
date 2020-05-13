@@ -2,9 +2,12 @@ package youtube
 
 import (
 	"context"
-	"errors"
 	"log"
+	"runtime"
+	"sync"
+	"time"
 
+	"github.com/davecgh/go-spew/spew"
 	"google.golang.org/api/option"
 	youtube "google.golang.org/api/youtube/v3"
 )
@@ -16,6 +19,8 @@ const (
 	OrderTime      Order = "time"
 )
 
+const rateLimit = time.Second / 20
+
 type Client struct {
 	apiKey string
 }
@@ -26,46 +31,73 @@ func New(apiKey string) *Client {
 }
 
 func (c *Client) GetComments(videoId string, order Order, maxComments int) ([]string, error) {
-
 	comments := []string{}
-
-	ctx := context.Background()
-	ctx, cancelCtxFunc := context.WithCancel(ctx)
-
-	youtubeService, err := youtube.NewService(ctx, option.WithAPIKey(c.apiKey))
+	youtubeService, err := youtube.NewService(context.Background(), option.WithAPIKey(c.apiKey))
 	if err != nil {
-		cancelCtxFunc()
 		return nil, err
 	}
 
 	commentThreadsService := youtube.NewCommentThreadsService(youtubeService)
 
 	// Get the instance with which we can do api calls to the youtube api
-	apiCall := commentThreadsService.List("snippet")
+	apiCaller := commentThreadsService.List("snippet")
 
-	apiCall.TextFormat("plainText")
-	apiCall.VideoId(videoId)
-	apiCall.Order(string(order))
+	apiCaller.TextFormat("plainText")
+	apiCaller.VideoId(videoId)
+	apiCaller.Order(string(order))
 
-	err = apiCall.Pages(ctx, func(resp *youtube.CommentThreadListResponse) error {
-		for _, item := range resp.Items {
-			c := item.Snippet.TopLevelComment.Snippet.TextDisplay
-			comments = append(comments, c)
+	var wg sync.WaitGroup
+	commentsChan := make(chan string, runtime.NumCPU())
+	quitChan := make(chan struct{})
 
-			lenComments := len(comments)
+	throttle := time.NewTicker(rateLimit)
 
-			log.Printf("%d/%d comments fetched!", lenComments, maxComments)
-			if lenComments == maxComments {
-				cancelCtxFunc()
-				break
+	go func() {
+	forLoop:
+		for {
+			select {
+			case <-quitChan:
+				break forLoop
+			default:
+				wg.Add(1)
+
+				<-throttle.C
+				go func() {
+					defer wg.Done()
+
+					resp, err := apiCaller.Do()
+					if err != nil {
+						log.Println(err)
+						return
+					}
+
+					pageToken := resp.NextPageToken
+					if pageToken == "" {
+						quitChan <- struct{}{}
+						return
+					}
+					apiCaller.PageToken(pageToken)
+
+					for _, item := range resp.Items {
+						commentsChan <- item.Snippet.TopLevelComment.Snippet.TextDisplay
+					}
+				}()
+
 			}
 		}
+		wg.Wait()
+		close(commentsChan)
+		close(quitChan)
+	}()
 
-		return nil
-	})
+	for c := range commentsChan {
+		comments = append(comments, c)
 
-	if err != nil && !errors.Is(err, context.Canceled) {
-		return nil, err
+		spew.Dump(len(comments))
+		if len(comments) == maxComments {
+			quitChan <- struct{}{}
+			return comments, nil
+		}
 	}
 
 	return comments, nil
