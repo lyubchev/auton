@@ -39,7 +39,7 @@ func (c *Client) GetComments(videoID string, order Order, maxComments int) ([]st
 
 	commentThreadsService := youtube.NewCommentThreadsService(youtubeService)
 
-	// Get the instance with which we can do api calls to the youtube api
+	// Create an instance which we use to make api calls to youtube's api
 	apiCall := commentThreadsService.List("snippet")
 
 	apiCall.TextFormat("plainText")
