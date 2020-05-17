@@ -26,7 +26,6 @@ func New(apiKey string) *Client {
 }
 
 func (c *Client) GetComments(videoID string, order Order, maxComments int) ([]string, error) {
-
 	comments := []string{}
 
 	ctx := context.Background()
@@ -46,6 +45,7 @@ func (c *Client) GetComments(videoID string, order Order, maxComments int) ([]st
 	apiCall.TextFormat("plainText")
 	apiCall.VideoId(videoID)
 	apiCall.Order(string(order))
+	apiCall.MaxResults(100)
 
 	err = apiCall.Pages(ctx, func(resp *youtube.CommentThreadListResponse) error {
 		for _, item := range resp.Items {
@@ -53,8 +53,8 @@ func (c *Client) GetComments(videoID string, order Order, maxComments int) ([]st
 			comments = append(comments, c)
 
 			lenComments := len(comments)
-
 			log.Printf("%d/%d comments fetched!", lenComments, maxComments)
+
 			if lenComments == maxComments {
 				cancel()
 				break

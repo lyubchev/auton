@@ -56,7 +56,6 @@ func AnalyzeCommentsTone(comments []string, ibmClient *ibm.Client) (map[tn.Tone]
 					log.Println(err)
 					return
 				}
-				log.Println("A new batch was analyzed!")
 
 				tonesChan <- tones
 			}(i, batch)
@@ -66,10 +65,14 @@ func AnalyzeCommentsTone(comments []string, ibmClient *ibm.Client) (map[tn.Tone]
 		close(tonesChan)
 	}()
 
+	analyzedCounter := 0
 	for tones := range tonesChan {
+		analyzedCounter += 1
 		for k, v := range tones {
 			tc[k] = append(tc[k], v)
 		}
+		log.Printf("%d/%d batches analyzed!", analyzedCounter, len(batches))
+
 	}
 
 	result := map[tn.Tone]float64{}

@@ -41,7 +41,7 @@ func NewWeb(ytClient *youtube.Client, ibmClient *ibm.Client) *Web {
 		middleware.Heartbeat("/ping"),
 	)
 	r.Use(render.SetContentType(render.ContentTypeJSON))
-	r.Get("/{videoID}", w.analyze)
+	r.Get("/analyze/{videoID}", w.analyze)
 
 	return w
 }
@@ -65,7 +65,7 @@ func (web *Web) analyze(w http.ResponseWriter, r *http.Request) {
 	comments, err := web.youtubeClient.GetComments(videoID, youtube.OrderRelevance, maxComments)
 	if err != nil {
 		render.Status(r, http.StatusInternalServerError)
-		render.JSON(w, r, "Couldn't fetch comments from youtube video with id"+videoID)
+		render.JSON(w, r, "Couldn't fetch comments from youtube video with id "+videoID)
 		return
 	}
 
